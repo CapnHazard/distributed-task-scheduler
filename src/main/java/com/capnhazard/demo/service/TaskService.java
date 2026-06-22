@@ -1,6 +1,7 @@
 package com.capnhazard.demo.service;
-import java.util.List;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import com.capnhazard.demo.enums.TaskStatus;
 import com.capnhazard.demo.model.Task;
 import com.capnhazard.demo.repository.TaskRepository;
@@ -20,6 +21,11 @@ public class TaskService {
     public Task createTask(Task task) {
         if(task.getName() == null || task.getName().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exception Found- TASK HAS NO NAME");
+        }
+        if(task.getScheduledAt() == null) {
+            task.setScheduledAt(LocalDateTime.now());
+        } else if(LocalDateTime.now().minusSeconds(60).isAfter(task.getScheduledAt())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exception Found- TASK SCHEDULED IN THE PAST");
         }
         return taskRepository.save(task);
     }
