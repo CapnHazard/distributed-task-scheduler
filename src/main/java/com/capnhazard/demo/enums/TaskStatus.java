@@ -5,5 +5,6 @@ public enum TaskStatus {
     RUNNING,
     DONE,
     FAILED,
+    CANCELLED,
     BLOCKED  // waiting on a dependency
 }

@@ -41,7 +41,7 @@ public class TaskService {
     public Task cancelTask(Long id) {
         Task t = getTaskById(id);
         if(t.getStatus() == TaskStatus.PENDING || t.getStatus() == TaskStatus.BLOCKED) {
-            t.setStatus(TaskStatus.FAILED);
+            t.setStatus(TaskStatus.CANCELLED);
             taskRepository.save(t);
         } else {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Exception Found- TASK CANNOT BE CANCELLED");
