@@ -82,6 +82,7 @@ public class TaskService {
             Thread.sleep(2000);
             t.setStatus(TaskStatus.DONE);
             try {
+                t.setCompletedAt(LocalDateTime.now());
                 t = taskRepository.save(t);
 
                 TaskExecutionHistory history = new TaskExecutionHistory();

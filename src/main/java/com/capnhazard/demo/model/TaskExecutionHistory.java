@@ -16,7 +16,7 @@ public class TaskExecutionHistory {
 
     private LocalDateTime completedAt;
     private int retryCount;
-    private TaskStatus status;
+    @Enumerated(EnumType.STRING) private TaskStatus status; //to show string for corresponding ENUM, not integer
 
     public Long getId() {
         return id;
