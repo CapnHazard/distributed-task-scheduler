@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import com.capnhazard.demo.enums.TaskStatus;
 import com.capnhazard.demo.model.Task;
+import com.capnhazard.demo.model.TaskExecutionHistory;
+import com.capnhazard.demo.repository.TaskExecutionHistoryRepository;
 import com.capnhazard.demo.repository.TaskRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -15,12 +17,14 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Service
 public class TaskService {
 
+    private final TaskExecutionHistoryRepository taskLog;
     private final TaskRepository taskRepository;
     private final ThreadPoolTaskExecutor taskExecutor;
 
-    public TaskService(TaskRepository taskRepository, ThreadPoolTaskExecutor taskExecutor) {
+    public TaskService(TaskRepository taskRepository, ThreadPoolTaskExecutor taskExecutor, TaskExecutionHistoryRepository taskLog) {
         this.taskRepository = taskRepository;
         this.taskExecutor = taskExecutor;
+        this.taskLog = taskLog;
     }
 
     public Task createTask(Task task) {
@@ -79,6 +83,13 @@ public class TaskService {
             t.setStatus(TaskStatus.DONE);
             try {
                 t = taskRepository.save(t);
+
+                TaskExecutionHistory history = new TaskExecutionHistory();
+                history.setTask(t);
+                history.setCompletedAt(t.getCompletedAt());
+                history.setRetryCount(t.getRetryCount());
+                history.setStatus(t.getStatus());
+                this.taskLog.save(history);
 
                 // dependency resolution: unblock tasks waiting on this task
                 List<Task> TaskList;
