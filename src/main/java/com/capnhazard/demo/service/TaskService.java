@@ -79,6 +79,15 @@ public class TaskService {
             t.setStatus(TaskStatus.DONE);
             try {
                 t = taskRepository.save(t);
+
+                // dependency resolution: unblock tasks waiting on this task
+                List<Task> TaskList;
+                TaskList = taskRepository.findByStatusAndDependsOn(TaskStatus.BLOCKED, t.getId());
+                for(Task task : TaskList) {
+                    task.setStatus(TaskStatus.PENDING);
+                    task = taskRepository.save(task);
+                }
+                
             } catch(OptimisticLockException e) {
                 System.out.println("Version conflict while saving DONE status for task ID: " + t.getId()
                 + ". Another thread may have modified this task.");

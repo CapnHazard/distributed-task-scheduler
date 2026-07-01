@@ -10,4 +10,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findByStatusAndScheduledAtLessThanEqual(TaskStatus status, LocalDateTime time);
+    List<Task> findByStatusAndDependsOn(TaskStatus status, Long id);
 }
