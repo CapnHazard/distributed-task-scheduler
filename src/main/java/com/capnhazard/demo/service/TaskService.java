@@ -2,7 +2,6 @@ package com.capnhazard.demo.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import com.capnhazard.demo.config.TaskExecutorConfig;
 import com.capnhazard.demo.enums.TaskStatus;
 import com.capnhazard.demo.model.Task;
 import com.capnhazard.demo.repository.TaskRepository;
@@ -78,10 +77,42 @@ public class TaskService {
         try {
             Thread.sleep(2000);
             t.setStatus(TaskStatus.DONE);
-            t = taskRepository.save(t);
+            try {
+                t = taskRepository.save(t);
+            } catch(OptimisticLockException e) {
+                System.out.println("Version conflict while saving DONE status for task ID: " + t.getId()
+                + ". Another thread may have modified this task.");
+                
+                // version conflict on DONE-save: re-fetch current version and reapply
+                Task k = taskRepository.findById(t.getId()).orElseThrow(
+                () -> new ResponseStatusException (HttpStatus.NOT_FOUND, "Task not found with id: " + t.getId()));
+                k.setStatus(TaskStatus.DONE);
+                taskRepository.save(k);
+            }
+
         } catch (Exception e) {
-            t.setStatus(TaskStatus.FAILED);
-            t = taskRepository.save(t);
+            int retryCount = t.getRetryCount();
+            int maxRetries = t.getMaxRetries();
+            if(retryCount < maxRetries) {
+                t.setStatus(TaskStatus.PENDING);
+                t.setRetryCount(++retryCount);
+                t.setScheduledAt(LocalDateTime.now().plusSeconds((long) Math.pow(2, retryCount))); //retry logic
+                try {
+                    t = taskRepository.save(t);
+                } catch(OptimisticLockException x) {
+                    System.out.println("Version conflict while saving retry (PENDING) status for task ID: " 
+                    + t.getId() + ", retryCount: " + retryCount);
+                }
+                
+            } else {
+                t.setStatus(TaskStatus.FAILED);
+                try {
+                    t = taskRepository.save(t);
+                } catch(OptimisticLockException y) {
+                    System.out.println("Version conflict while saving FAILED status for task ID: " 
+                    + t.getId());
+                }
+            }
         }
     }
 }
