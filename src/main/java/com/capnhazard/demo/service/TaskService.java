@@ -93,8 +93,9 @@ public class TaskService {
                 + ". Another thread may have modified this task.");
                 
                 // version conflict on DONE-save: re-fetch current version and reapply
-                Task k = taskRepository.findById(t.getId()).orElseThrow(
-                () -> new ResponseStatusException (HttpStatus.NOT_FOUND, "Task not found with id: " + t.getId()));
+                Long taskID = t.getId();
+                Task k = taskRepository.findById(taskID).orElseThrow(
+                () -> new ResponseStatusException (HttpStatus.NOT_FOUND, "Task not found with id: " + taskID));
                 k.setStatus(TaskStatus.DONE);
                 taskRepository.save(k);
             }
